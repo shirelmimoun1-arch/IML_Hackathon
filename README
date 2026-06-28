@@ -1,0 +1,56 @@
+Yaniv Hayoun,Shirel Mimoun,Michal Segal,Ori Tzairi
+318318698,325000057,322894353,207955006
+
+Model architecture
+
+Histogram-based Gradient Boosting Regressor (sklearn HistGradientBoostingRegressor)
+predicting hourly bike demand per station.
+
+Features
+
+- Time: hour, weekday, weekend, working_day
+- Holidays: one-hot encoded holiday names (4 columns)
+- Demand averages (target encoding): city_hour_mean, city_weekday_mean
+  with global fallback for unseen cities
+- Weather: temperature, humidity, apparent_temperature, precipitation,
+  rain, snowfall, cloud_cover, wind_speed
+- POI/Infrastructure: bike_lane_length, park_area, university_count,
+  office_count, retail_count, restaurant_cafe_count, transit_stop_count,
+  distance_to_nearest_rail_station, distance_to_city_center
+
+Design Decisions
+
+- Station ID and city are NOT used as direct features to enable generalization
+  to unseen cities (city3, city4).
+- Training data includes demand=0 rows (active-window grid with 24h buffer
+  per station) to match the evaluation format. We took the first and last rides time stamps of staions 
+  samples and filled all missing hours in between and a buffer 24 hours with demand = 0.
+- Out-of-range values replaced with column median (computed on train only).
+- Missing POI/location values imputed with city median, fallback to global median.
+- We ran a matrix of hyperparameters ranges and continued with the best combination.
+
+Hyperparameters
+
+- max_iter: 1000
+- learning_rate: 0.05
+- max_depth: 10
+- max_leaf_nodes: 127
+- min_samples_leaf: 20
+
+Reproducing
+
+From the submission folder:
+
+    cd submissions/my_team
+    python train.py
+
+This reads ../../dataset/train_set.csv, trains the model from scratch,
+and saves weights.joblib. Takes approximately 5 minutes.
+
+Validation Performance
+
+MAE on local time-based validation split (last 20% of data):
+- Overall: 0.964
+- City 1: 1.228
+- City 2: 0.654
+- City 3: 0.995
